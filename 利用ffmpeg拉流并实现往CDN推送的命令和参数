@@ -2,3 +2,32 @@
 ffmpeg拉流：ffmpeg -v 64 -i rtmp://220.181.155.58/live/c13 -acodec libfaac -ar 44100 -ac 1 -b:a 16 -vcodec libx264 -preset faster -x264-params me=hex:threads=16:ref=2:bframes=3:8x8dct=1:fps=25:keyint=50:bitrate=1200:vbv-maxrate=1200:vbv-bufsize=1200 -f flv rtmp://localhost/p2p/CCTV13
 推流到CDN：ffmpeg -i rtmp://localhost:1935/p2p/CCTV13 -acodec copy -vcodec copy -f flv rtmp://live.p2p.galaxyclouds.cn/live/CCTV13
 其中rtmp://220.181.155.58/live/c13是源站流url，live.p2p.galaxyclouds.cn是CDN地址。
+
+服务器nginx服务监控脚本(/data/nginx/nginx-1.8.1/startnginx.sh)：
+#!/bin/bash
+dir="$(dirname $0)"
+sudo ${dir}/objs/nginx -p ${dir}
+
+脚本来启动转码服务(pullCCTV13.sh)：
+#!/bin/bash
+#T=`date +%H_%M_%S`
+T=`date +%s`
+mv data_log/cctv13.log data_log/cctv13.bak.log
+nohup ffmpeg -v 64 -i rtmp://220.181.155.58/live/c13 -acodec  libfaac -ar 44100 -ac 1 -b:a 16 -vcodec libx264 -preset faster -x264-params "me=hex:threads=16:ref=2:bframes=3:8x8dct=1:fps=25:keyint=50:bitrate=1200:vbv-maxrate=1200:vbv-bufsize=1200" -f flv rtmp://localhost/p2p/CCTV13 > ./data_log/cctv13.log 2>&1 &
+
+转码进程监控脚本(同时保存日志到本-地monitor.sh)：
+#!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+cd $(dirname $0)
+#判断nginx服务是否在运行，没有运行就执行启动脚本
+pid=$(ps aux|grep nginx|grep -v grep|awk '{print $2}')
+[ -z "$pid" ] && {
+echo "nginx not running @$(date +%F\ %T)" >> log
+bash /data/nginx/nginx-1.8.1/startnginx.sh
+}
+#判断经常是否存在，不存在就执行重启脚本。
+pid=$(ps aux|grep ffmpeg|grep "CCTV13"|awk '{print $2}')
+[ -z "$pid" ] && {
+echo "CCTV13 not running @$(date +%F\ %T)" >> log
+bash ./pullCCTV13.sh
+}
