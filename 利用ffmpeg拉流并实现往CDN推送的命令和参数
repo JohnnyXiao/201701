@@ -1,0 +1,4 @@
+利用ffmpeg拉流并实现往CDN推送的命令和参数：
+ffmpeg拉流：ffmpeg -v 64 -i rtmp://220.181.155.58/live/c13 -acodec libfaac -ar 44100 -ac 1 -b:a 16 -vcodec libx264 -preset faster -x264-params me=hex:threads=16:ref=2:bframes=3:8x8dct=1:fps=25:keyint=50:bitrate=1200:vbv-maxrate=1200:vbv-bufsize=1200 -f flv rtmp://localhost/p2p/CCTV13
+推流到CDN：ffmpeg -i rtmp://localhost:1935/p2p/CCTV13 -acodec copy -vcodec copy -f flv rtmp://live.p2p.galaxyclouds.cn/live/CCTV13
+其中rtmp://220.181.155.58/live/c13是源站流url，live.p2p.galaxyclouds.cn是CDN地址。
