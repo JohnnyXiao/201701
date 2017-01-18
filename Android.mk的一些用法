@@ -1,0 +1,5 @@
+1.Android.mk中利用LOCAL_CFLAGS来指定编译特定的宏，如LOCAL_CFLAGS := -D__HTTP__   //开启__HTTP__宏并编译。
+2.Android项目下的jni目录下的Android.mk中如果有include $(call all-makefiles-under,$(LOCAL_PATH))，意思是指从$(LOCAL_PATH)目录递归查找子目录
+下的Android.mk展开并编译，每个Android.mk文件如果存在依赖的文件则先去找该依赖文件(有则直接用，没有的话会先编译依赖的那个文件)然后编译。
+3.LOCAL_MODULE用于指定编译完成后生成的目标文件的名字，如LOCAL_MODULE = VenusServer_p2p会生成libVenusServer_p2p.so。
+4.Android.mk里面可以用$(shell commands)的方式调用shell命令。
